@@ -79,8 +79,8 @@ def return_spatial_geo_df(n_x: int,
     y_spatial_autocorelation_scope_y_start_spacing = y_spatial_autocorelation_scope_y_start * spacing
     y_spatial_autocorelation_scope_y_end_spacing = y_spatial_autocorelation_scope_y_end * spacing
 
-    y_start, y_end, y_step = (treated_scope_x_start)*spacing, (treated_scope_x_end)*spacing, spacing
-    x_start, x_end, x_step = (treated_scope_y_start)*spacing, (treated_scope_y_end)*spacing, spacing
+    y_start, y_end, y_step = (treated_scope_y_start)*spacing, (treated_scope_y_end)*spacing, spacing
+    x_start, x_end, x_step = (treated_scope_x_start)*spacing, (treated_scope_x_end)*spacing, spacing
 
     y_vals = np.arange(y_start, y_end + y_step, y_step)
     x_vals = np.arange(x_start, x_end + x_step, x_step)
