@@ -99,3 +99,30 @@ def show_gdf_folium(gdf, fields=['block_id'], zoom_start=13):
     m.save(tmp_file.name)
     webbrowser.open(tmp_file.name)
     return m
+
+def make_treatment_effects_df(df_arg, rings_list, model_suffix, treated_col='treated', #real_col='ITE_real'
+                              ):
+    results = []
+
+    for ring in rings_list:
+
+        series = df_arg[df_arg[treated_col] == ring][ring]
+
+        att = series.mean()
+
+        se = series.std(ddof=1) / np.sqrt(len(series))
+
+        ci_low = att - 1.96 * se
+        ci_high = att + 1.96 * se
+
+        results.append({
+            'ring': ring,
+            f'att_{model_suffix}': att,
+            f'se_{model_suffix}': se,
+            #'ci_low': ci_low,
+            #'ci_high': ci_high,
+            #'ITE_real_mean': ite_real_mean,
+            #'n': len(series)
+        })
+
+    return pd.DataFrame(results)
