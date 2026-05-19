@@ -2,6 +2,7 @@
 
 ## Libraries
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import folium
@@ -126,3 +127,72 @@ def make_treatment_effects_df(df_arg, rings_list, model_suffix, treated_col='tre
         })
 
     return pd.DataFrame(results)
+
+def plot_att_row(
+    df,
+    ring_name,
+    true_effect_col,
+    att_dict,
+    figsize=(8, 5)
+    ):
+
+    # wybór wiersza
+    row = df[df["ring"] == ring_name].iloc[0]
+
+    # true effect
+    true_effect = row[true_effect_col]
+
+    models = list(att_dict.keys())
+    x = np.arange(len(models))
+
+    atts = []
+    lower = []
+    upper = []
+
+    for model_name, (att_col, se_col) in att_dict.items():
+        att = row[att_col]
+        se = row[se_col]
+
+        ci_low = att - 1.96 * se
+        ci_high = att + 1.96 * se
+
+        atts.append(att)
+        lower.append(ci_low)
+        upper.append(ci_high)
+
+    plt.figure(figsize=figsize)
+
+    # confidence intervals
+    for i in range(len(models)):
+        plt.vlines(
+            x=i,
+            ymin=lower[i],
+            ymax=upper[i],
+            color="black",
+            linewidth=1
+        )
+
+    # point estimates
+    plt.scatter(
+        x,
+        atts,
+        color="black",
+        zorder=3
+    )
+
+    # true effect line
+    plt.axhline(
+        y=true_effect,
+        color="red",
+        linestyle="--",
+        linewidth=1.5
+    )
+
+    plt.xticks(x, models)
+    plt.ylabel("ATT")
+    plt.title(ring_name)
+
+    plt.grid(axis="y", alpha=0.3)
+
+    plt.tight_layout()
+    plt.show()
