@@ -187,8 +187,15 @@ def plot_att_row(
         linestyle="--",
         linewidth=1.5
     )
-
-    plt.xticks(x, models)
+    # zero line
+    plt.axhline(
+        y=0,
+        color="black",
+        linestyle="--",
+        linewidth=1
+    )
+    
+    plt.xticks(x, models, rotation=90)
     plt.ylabel("ATT")
     plt.title(ring_name)
 
