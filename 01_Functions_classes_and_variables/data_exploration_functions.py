@@ -128,6 +128,35 @@ def make_treatment_effects_df(df_arg, rings_list, model_suffix, treated_col='tre
 
     return pd.DataFrame(results)
 
+def make_att_table(df, inner_ring, outer_rings, treated_col, suffix):
+    att_col = f'att_{suffix}'
+    se_col = f'se_att_{suffix}'
+
+    temp_list = []
+
+    temp_s = df[df[treated_col] == inner_ring]['treated_inner_ring']
+
+    temp_df = pd.DataFrame({
+        'ring': [inner_ring],
+        att_col: [float(temp_s.mean())],
+        se_col: [float(temp_s.sem())]
+    })
+
+    temp_list.append(temp_df)
+
+    for ring in outer_rings:
+        temp_s = df[df[treated_col] == ring]['treated_outer_rings']
+
+        temp_df = pd.DataFrame({
+            'ring': [ring],
+            att_col: [float(temp_s.mean())],
+            se_col: [float(temp_s.sem())]
+        })
+
+        temp_list.append(temp_df)
+
+    return pd.concat(temp_list, ignore_index=True)
+
 def plot_att_row(
     df,
     ring_name,
