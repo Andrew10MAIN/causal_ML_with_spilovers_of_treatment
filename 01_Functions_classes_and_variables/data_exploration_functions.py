@@ -232,3 +232,93 @@ def plot_att_row(
 
     plt.tight_layout()
     plt.show()
+
+
+def plot_att_by_param(
+    df,
+    param_col,
+    ring_value,
+    models_dict,
+    true_effect_col="true_effect"
+):
+
+    d = df[df["ring"] == ring_value].copy()
+    d = d.sort_values(param_col)
+
+    x = d[param_col].values
+
+    plt.figure(figsize=(10, 6))
+
+    colors = plt.cm.tab10(np.linspace(0, 1, len(models_dict)))
+
+    # =========================
+    # MODELS
+    # =========================
+    for i, (model_name, (att_col, se_col)) in enumerate(models_dict.items()):
+
+        att = d[att_col].values
+        se = d[se_col].values
+
+        color = colors[i]
+
+        # central ATT line
+        plt.plot(
+            x, att,
+            label=model_name,
+            color=color,
+            linewidth=2.5
+        )
+
+        # confidence band (fill)
+        plt.fill_between(
+            x,
+            att - se,
+            att + se,
+            color=color,
+            alpha=0.1
+        )
+
+        # SE boundaries (dotted)
+        plt.plot(
+            x, att + se,
+            color=color,
+            linestyle=":",
+            linewidth=1,
+            alpha=0.7
+        )
+
+        plt.plot(
+            x, att - se,
+            color=color,
+            linestyle=":",
+            linewidth=1,
+            alpha=0.7
+        )
+
+    # =========================
+    # TRUE EFFECT
+    # =========================
+    if true_effect_col in d.columns:
+        plt.plot(
+            x,
+            d[true_effect_col],
+            "r--",
+            linewidth=2,
+            label="True effect"
+        )
+
+    # =========================
+    # ZERO LINE
+    # =========================
+    plt.axhline(0, color="black", linestyle="--", linewidth=1)
+
+    # =========================
+    # STYLE
+    # =========================
+    plt.xlabel(param_col)
+    plt.ylabel("ATT")
+    plt.title(f"ATT vs {param_col} | {ring_value}")
+    plt.legend()
+    plt.grid(alpha=0.3)
+
+    plt.show()

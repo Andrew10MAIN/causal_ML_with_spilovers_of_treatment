@@ -43,6 +43,43 @@ def generate_spillovers(coords, gdf, mean_tau_treated,
 
     return spill
 
+def create_ring_categories(
+        distances_array,
+        inner_mask,
+        max_distance,
+        spacing_value
+    ):
+
+        categories = np.full(
+            len(distances_array),
+            "control",
+            dtype=object
+        )
+
+        categories[inner_mask] = "treated_inner_ring"
+
+        n_rings = int(
+            np.ceil(max_distance / spacing_value)
+        )
+
+        for ring in range(1, n_rings + 1):
+
+            lower = (ring - 1) * spacing_value
+            upper = ring * spacing_value
+
+            mask_ring = (
+                (~inner_mask) &
+                (distances_array > lower) &
+                (distances_array <= upper) &
+                (distances_array <= max_distance)
+            )
+
+            categories[mask_ring] = (
+                f"treated_outer_ring{ring}"
+            )
+
+        return categories
+
 
 def return_spatial_geo_df(
     n_x: int,
@@ -359,48 +396,10 @@ def return_spatial_geo_df(
         Y_base
     )
 
-    # =========================================================
-    # 13. HELPER FUNCTION FOR CATEGORICAL RINGS
-    # =========================================================
-    def create_ring_categories(
-        distances_array,
-        inner_mask,
-        max_distance,
-        spacing_value
-    ):
 
-        categories = np.full(
-            len(distances_array),
-            "control",
-            dtype=object
-        )
-
-        categories[inner_mask] = "treated_inner_ring"
-
-        n_rings = int(
-            np.ceil(max_distance / spacing_value)
-        )
-
-        for ring in range(1, n_rings + 1):
-
-            lower = (ring - 1) * spacing_value
-            upper = ring * spacing_value
-
-            mask_ring = (
-                (~inner_mask) &
-                (distances_array > lower) &
-                (distances_array <= upper) &
-                (distances_array <= max_distance)
-            )
-
-            categories[mask_ring] = (
-                f"treated_outer_ring{ring}"
-            )
-
-        return categories
 
     # =========================================================
-    # 14. T_tot_cat
+    # 13. T_tot_cat
     # =========================================================
     gdf["T_tot_cat"] = create_ring_categories(
         distances_array=distances,
@@ -410,7 +409,7 @@ def return_spatial_geo_df(
     )
 
     # =========================================================
-    # 15. UNDER / OVER ESTIMATED CATEGORIES
+    # 14. UNDER / OVER ESTIMATED CATEGORIES
     # =========================================================
     if understimated_treatment_spillover_distance is not None:
 
@@ -435,7 +434,7 @@ def return_spatial_geo_df(
         )
 
     # =========================================================
-    # 16. ODR VARIABLES
+    # 15. ODR VARIABLES
     # =========================================================
     if overestimated_treatment_spillover_distance is not None:
 
@@ -466,10 +465,19 @@ def return_spatial_geo_df(
                 (distances <= odr_max_distance)
             )
         ).astype(int)
+    # =========================================================
+    # 16. CONTINUOUS TREATMENT FOR NEIGHBOURHOOD
+    # =========================================================
+    
+    gdf2= gdf.copy()
+    for ring in range(1, n_odr-1):
+        gdf2[f"ODR_cont_{ring}"] = gdf2[f"ODR_{ring}"] / ring
+    gdf2["Cont_T_N"] = gdf2.filter(like="ODR_cont_").sum(axis=1)
 
     # =========================================================
     # 17. OUTPUT
     # =========================================================
+    gdf["Cont_T_N"] = gdf2["Cont_T_N"]
     gdf["C1"] = C1
     gdf["C2"] = C2
     gdf["C3"] = C3
@@ -483,7 +491,7 @@ def return_spatial_geo_df(
     gdf["distance_to_treatment"] = distances
     gdf["decay"] = decay
 
-    gdf["Y"] = Y
-    gdf["Y_ns"] = Y_base
+    gdf["Y_dep_var"] = Y
+    gdf["Y_dep_var_ns"] = Y_base
 
     return gdf
