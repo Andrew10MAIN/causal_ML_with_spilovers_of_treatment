@@ -81,6 +81,9 @@ def create_ring_categories(
         return categories
 
 
+
+
+
 def return_spatial_geo_df(
     n_x: int,
     n_y: int,
@@ -111,6 +114,8 @@ def return_spatial_geo_df(
     logistic_distance_decay: bool,
 
 
+    treated_last_row_length: int = None,
+
     understimated_treatment_spillover_distance: float = None,
     overestimated_treatment_spillover_distance: float = None,
 
@@ -140,7 +145,40 @@ def return_spatial_geo_df(
                 "max_treatment_spillover_distance"
             )
 
+    # =========================================================
+    # VALIDATION: PARTIAL LAST TREATED ROW
+    # =========================================================
 
+    treated_width = (
+        treated_scope_x_end -
+        treated_scope_x_start +
+        1
+    )
+
+    treated_height = (
+        treated_scope_y_end -
+        treated_scope_y_start +
+        1
+    )
+
+    if treated_last_row_length is not None:
+
+        if treated_last_row_length < 1:
+            raise ValueError(
+                "treated_last_row_length cannot be smaller than 1"
+            )
+
+        if treated_last_row_length > treated_width:
+            raise ValueError(
+                "treated_last_row_length cannot be greater "
+                "than treated area width"
+            )
+
+        if treated_height < 2:
+            raise ValueError(
+                "Partial last row requires treated area "
+                "height >= 2"
+            )
     # =========================================================
     # 0. GRID
     # =========================================================
@@ -184,22 +222,58 @@ def return_spatial_geo_df(
     # =========================================================
     # 2. INNER TREATMENT RING (T)
     # =========================================================
-    x_vals = np.arange(
+
+    gdf["T"] = 0
+
+    x_full = np.arange(
         treated_scope_x_start * spacing,
         (treated_scope_x_end + 1) * spacing,
         spacing
     )
 
-    y_vals = np.arange(
+    y_full = np.arange(
         treated_scope_y_start * spacing,
         (treated_scope_y_end + 1) * spacing,
         spacing
     )
 
-    gdf["T"] = (
-        gdf["x"].isin(x_vals) &
-        gdf["y"].isin(y_vals)
-    ).astype(int)
+    # ---------------------------------------------------------
+    # STANDARD FULL RECTANGLE
+    # ---------------------------------------------------------
+
+    if treated_last_row_length is None:
+
+        gdf["T"] = (
+            gdf["x"].isin(x_full) &
+            gdf["y"].isin(y_full)
+        ).astype(int)
+
+    # ---------------------------------------------------------
+    # PARTIAL LAST ROW
+    # ---------------------------------------------------------
+
+    else:
+
+        y_last = treated_scope_y_end * spacing
+
+        # all rows except last -> full width
+        mask_full_rows = (
+            gdf["x"].isin(x_full) &
+            gdf["y"].isin(y_full[:-1])
+        )
+
+        # partial last row filled LEFT -> RIGHT
+        x_partial = x_full[:treated_last_row_length]
+
+        mask_partial_last_row = (
+            gdf["x"].isin(x_partial) &
+            (gdf["y"] == y_last)
+        )
+
+        gdf["T"] = (
+            mask_full_rows |
+            mask_partial_last_row
+        ).astype(int)
 
     mask_T_inner = gdf["T"] == 1
 
@@ -495,3 +569,6 @@ def return_spatial_geo_df(
     gdf["Y_dep_var_ns"] = Y_base
 
     return gdf
+
+
+
