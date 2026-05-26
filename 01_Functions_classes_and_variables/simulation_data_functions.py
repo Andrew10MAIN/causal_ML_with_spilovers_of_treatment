@@ -115,6 +115,7 @@ def return_spatial_geo_df(
 
 
     treated_last_row_length: int = None,
+    y_ns_to_att_ratio: float = None,
 
     understimated_treatment_spillover_distance: float = None,
     overestimated_treatment_spillover_distance: float = None,
@@ -441,6 +442,18 @@ def return_spatial_geo_df(
         tau +
         epsilon
     )
+
+
+    # =========================================================
+    # OPTIONAL: CALIBRATION OF MEAN(Y_ns) RELATIVE TO ATT
+    # =========================================================
+    if y_ns_to_att_ratio is not None:
+
+        desired_mean = y_ns_to_att_ratio * ATT_target
+
+        shift = desired_mean - Y_base.mean()
+
+        Y_base = Y_base + shift
 
     # =========================================================
     # 12. SPATIAL Y
