@@ -56,3 +56,12 @@ cmap_div_white = LinearSegmentedColormap.from_list(
         (1.0, (180/255, 0/255, 0/255))
     ]
 )
+
+base_pairs = {
+    'a': (6, 10),
+    'b': (7, 11),
+    'c': (8, 12),
+    'd': (9, 13)
+}
+
+third_values = [1, 1.5, 2, 3.5, 4, 4.5, 5, 5.5, 6, 6.5]

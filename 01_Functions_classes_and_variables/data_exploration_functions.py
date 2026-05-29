@@ -3,11 +3,10 @@
 ## Libraries
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
 import geopandas as gpd
-import folium
-import tempfile
-import webbrowser
+import matplotlib.pyplot as plt
+
 
 def plot_gdf_points(
     gdf,
@@ -101,32 +100,7 @@ def show_gdf_folium(gdf, fields=['block_id'], zoom_start=13):
     webbrowser.open(tmp_file.name)
     return m
 
-def make_treatment_effects_df(df_arg, rings_list, model_suffix, treated_col='treated', #real_col='ITE_real'
-                              ):
-    results = []
 
-    for ring in rings_list:
-
-        series = df_arg[df_arg[treated_col] == ring][ring]
-
-        att = series.mean()
-
-        se = series.std(ddof=1) / np.sqrt(len(series))
-
-        ci_low = att - 1.96 * se
-        ci_high = att + 1.96 * se
-
-        results.append({
-            'ring': ring,
-            f'att_{model_suffix}': att,
-            f'se_{model_suffix}': se,
-            #'ci_low': ci_low,
-            #'ci_high': ci_high,
-            #'ITE_real_mean': ite_real_mean,
-            #'n': len(series)
-        })
-
-    return pd.DataFrame(results)
 
 def make_att_table(df, inner_ring, outer_rings, treated_col, suffix):
     att_col = f'att_{suffix}'
@@ -322,3 +296,110 @@ def plot_att_by_param(
     plt.grid(alpha=0.3)
 
     plt.show()
+
+def plot_rmse_att(
+    df,
+    parameter_col,
+    att_true_col,
+    model_cols,
+    title_arg,
+    y_axis_title,
+    rotate_x_labels=False
+):
+
+    rmse_df = (
+        df.groupby(parameter_col)
+        .apply(
+            lambda g: pd.Series({
+                f"rmse_{col}": np.sqrt(
+                    np.mean(
+                        ((g[col] - g[att_true_col]) / g[att_true_col]) ** 2
+                    )
+                )
+                for col in model_cols
+            })
+        )
+        .reset_index()
+    )
+
+    # Plot
+    plt.figure(figsize=(9, 5))
+
+    for col in model_cols:
+        plt.plot(
+            rmse_df[parameter_col],
+            rmse_df[f"rmse_{col}"],
+            marker="o",
+            label=col
+        )
+
+    plt.xlabel(parameter_col)
+    plt.ylabel(y_axis_title)
+    plt.title(title_arg)
+
+    if rotate_x_labels:
+        plt.xticks(rotation=90)
+
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+
+
+
+def compute_significance_share(
+    df,
+    parameter_col,
+    model_dict
+):
+
+
+    df_flagged = df.copy()
+
+    se_cols_to_drop = []
+
+    # =========================================================
+    # 1. Create flags + mask ATT if not significant
+    # =========================================================
+    for model_name, (att_col, se_col) in model_dict.items():
+
+        flag_col = f"{model_name}_is_sig"
+
+        is_sig = (df_flagged[att_col] - df_flagged[se_col]) > 0
+
+        df_flagged[flag_col] = is_sig
+
+        # mask ATT if not significant
+        df_flagged.loc[~is_sig, att_col] = np.nan
+
+        se_cols_to_drop.append(se_col)
+
+    # drop SE columns
+    df_flagged = df_flagged.drop(columns=se_cols_to_drop)
+
+    # =========================================================
+    # 2. Aggregate shares
+    # =========================================================
+    results = []
+
+    grouped = df_flagged.groupby(parameter_col)
+
+    for param_value, g in grouped:
+
+        row = {
+            parameter_col: param_value,
+            "n": len(g)
+        }
+
+        for model_name in model_dict.keys():
+            flag_col = f"{model_name}_is_sig"
+            row[f"{model_name}_sig_share"] = g[flag_col].mean()
+
+        results.append(row)
+
+    df_sig = (
+        pd.DataFrame(results)
+        .sort_values(parameter_col)
+        .reset_index(drop=True)
+    )
+
+    return df_sig, df_flagged

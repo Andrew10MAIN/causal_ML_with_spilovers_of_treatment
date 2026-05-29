@@ -6,6 +6,18 @@ from libpysal.weights import DistanceBand
 from scipy.sparse import identity
 from scipy.sparse.linalg import spsolve
 from scipy.spatial import cKDTree
+from itertools import product
+
+
+def generate_dict_of_combs(base_pairs, third_values):
+    result = {}
+    for block in range(1, 26):
+        for letter, (x, y) in base_pairs.items():
+            for i, z in enumerate(third_values, start=1):
+                key = f"{letter}{i}_b{block}"
+                result[key] = [x, y, z]
+    return result
+
 
 def generate_spillovers(coords, gdf, mean_tau_treated,
                         distance_ring_number,
