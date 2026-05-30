@@ -1,10 +1,23 @@
 
 
 ## Libraries
-import numpy as np
-import pandas as pd
-import geopandas as gpd
+# import numpy as np
+# import pandas as pd
+# import geopandas as gpd
 from matplotlib.colors import LinearSegmentedColormap, to_hex
+import yaml
+from pathlib import Path
+
+## load config
+
+def load_config(path=None):
+    if path is None:
+        path = Path(__file__).resolve().parent.parent.parent / "configs" / "experiment.yaml"
+    else:
+        path = Path(path)
+
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
 
 ## Variables
 ### Colors
@@ -83,6 +96,3 @@ replacing_dict_odr_ring = {'T':'treated_inner_ring',
                                                                         'ODR_4':'treated_outer_ring4'
                                                                           }
 
-## Random seed
-
-SEED = 12345

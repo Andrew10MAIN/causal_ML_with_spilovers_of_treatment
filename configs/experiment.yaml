@@ -1,0 +1,28 @@
+experiment:
+  name: baseline_spillovers
+  seed: 42
+
+data:
+  output_path1: "data"
+  output_path2: "simulations"
+  output_path3: "experiment_001.sqlite"
+
+simulation:
+  n_x: 20
+  n_y: 15
+  spacing: 100
+
+  treated_scope_y_start: 6
+  treated_scope_y_end: 8
+
+  ATT_target: 1.5
+  rho: 0.15
+
+spillovers:
+  max_distance: 400
+  logistic_decay: True
+
+results:
+  results_path1: "results"
+  results_path2: "data"
+  results_path3: "experiment_001.csv"
