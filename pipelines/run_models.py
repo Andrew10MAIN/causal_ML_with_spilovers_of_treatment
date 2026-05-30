@@ -56,7 +56,7 @@ def main():
         verbose=10
     )(
         delayed(process_single_key)(i, replacing_dict_0_ring, replacing_dict_odr_ring, dict_of_gdfs, dict_of_combs)
-        for i in list(dict_of_gdfs.keys())[:5]#dict_of_gdfs.keys()
+        for i in dict_of_gdfs.keys()
     )
 
     df_results = pd.concat(list_of_output_dfs, ignore_index=True)
