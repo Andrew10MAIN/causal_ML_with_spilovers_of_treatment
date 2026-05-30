@@ -6,7 +6,7 @@ from libpysal.weights import DistanceBand
 from scipy.sparse import identity
 from scipy.sparse.linalg import spsolve
 from scipy.spatial import cKDTree
-from itertools import product
+#from itertools import product
 
 
 def generate_dict_of_combs(base_pairs, third_values):

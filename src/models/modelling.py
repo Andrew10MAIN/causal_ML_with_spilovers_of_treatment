@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-import geopandas as gpd
-from shapely.geometry import Point
-from libpysal.weights import DistanceBand
-from scipy.sparse import identity
-from scipy.sparse.linalg import spsolve
-from scipy.spatial import cKDTree
+#import geopandas as gpd
+#from shapely.geometry import Point
+#from libpysal.weights import DistanceBand
+#from scipy.sparse import identity
+#from scipy.sparse.linalg import spsolve
+#from scipy.spatial import cKDTree
 
 import statsmodels.api as sm
 from sklearn.ensemble import RandomForestRegressor
