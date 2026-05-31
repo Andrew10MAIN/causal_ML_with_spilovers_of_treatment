@@ -403,3 +403,25 @@ def compute_significance_share(
     )
 
     return df_sig, df_flagged
+
+
+def plot_ratios(df, x_col, y_cols, figsize=(8, 5)):
+    plt.figure(figsize=figsize)
+
+    for col in y_cols:
+        plt.plot(
+            df[x_col],
+            df[col],
+            marker='o',
+            linewidth=2,
+            label=col
+        )
+
+    plt.xlabel(x_col)
+    plt.ylabel("Ratio")
+    plt.ylim(0, 1.05)
+    plt.xticks(rotation=45)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
